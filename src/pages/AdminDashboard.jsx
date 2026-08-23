@@ -607,7 +607,7 @@ export function AdminDashboard() {
   }
 
   return (
-    <div style={S.page}>
+    <div style={S.page} className="admin-page-container">
       <div style={S.bgGrid} />
 
       {/* Toast */}
@@ -2020,6 +2020,9 @@ export function AdminDashboard() {
 
       <style>{`
         @media (max-width: 860px) {
+          .admin-page-container {
+            flex-direction: column !important;
+          }
           .admin-sidebar {
             position: relative !important;
             width: 100% !important;

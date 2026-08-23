@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { authService } from '../services/authService'
 
 export function AuthModal({ isOpen, onClose, onAuthSuccess }) {
@@ -9,6 +9,29 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }) {
   const [errorMsg, setErrorMsg] = useState('')
   const [statusNotice, setStatusNotice] = useState('')
 
+  // Prevent background scrolling and handle Escape key while modal is open
+  useEffect(() => {
+    if (!isOpen) return
+
+    const originalOverflow = document.body.style.overflow
+
+    // Lock page background scrolling
+    document.body.style.overflow = 'hidden'
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose?.()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.body.style.overflow = originalOverflow
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isOpen, onClose])
+
   if (!isOpen) return null
 
   const handleChange = (e) => {
@@ -16,40 +39,83 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }) {
     setErrorMsg('')
   }
 
+  const validateForm = () => {
+    const trimmedEmail = formData.email.trim()
+    const trimmedPassword = formData.password
+
+    if (mode === 'register') {
+      const trimmedName = formData.name.trim()
+
+      if (!trimmedName) {
+        return 'Please enter your full name.'
+      }
+
+      if (trimmedName.length < 2) {
+        return 'Full name must be at least 2 characters long.'
+      }
+
+      if (!/^[a-zA-Z\s'.]{2,60}$/.test(trimmedName)) {
+        return 'Full name should only contain letters, spaces, and standard name characters (cannot contain numbers or special symbols).'
+      }
+
+      if (!trimmedEmail) {
+        return 'Please enter your email address.'
+      }
+
+      if (!/^[a-zA-Z]/.test(trimmedEmail)) {
+        return 'Email address must start with a letter (cannot start with a number or special character).'
+      }
+
+      if (trimmedEmail.includes('..')) {
+        return 'Email address cannot contain consecutive dots.'
+      }
+
+      const emailRegex = /^[a-zA-Z][a-zA-Z0-9._%+-]*@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+      if (!emailRegex.test(trimmedEmail)) {
+        return 'Please enter a valid email address (e.g., student@university.edu).'
+      }
+
+      if (!trimmedPassword) {
+        return 'Please enter a password.'
+      }
+
+      if (trimmedPassword.length < 6) {
+        return 'Password must be at least 6 characters long.'
+      }
+    } else {
+      if (!trimmedEmail) {
+        return 'Please enter your email address.'
+      }
+      if (!trimmedPassword) {
+        return 'Please enter your password.'
+      }
+    }
+
+    return null
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setErrorMsg('')
     setStatusNotice('')
 
-    if (!formData.email || !formData.password) {
-      setErrorMsg('Please fill in all required fields.')
+    const validationError = validateForm()
+    if (validationError) {
+      setErrorMsg(validationError)
       return
-    }
-
-    if (mode === 'register') {
-      if (!formData.name) {
-        setErrorMsg('Please enter your full name.')
-        return
-      }
-      
-      if (!/^[a-zA-Z]/.test(formData.email)) {
-        setErrorMsg('Email must start with a letter (cannot start with a number or special character).');
-        return;
-      }
-      if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.email)) {
-        setErrorMsg('Please enter a valid email address.');
-        return;
-      }
     }
 
     setLoading(true)
 
+    const cleanEmail = formData.email.trim().toLowerCase()
+    const cleanName = formData.name.trim()
+
     try {
       let result
       if (mode === 'register') {
-        result = await authService.register(formData.name, formData.email, formData.password, formData.course)
+        result = await authService.register(cleanName, cleanEmail, formData.password, formData.course)
       } else {
-        result = await authService.login(formData.email, formData.password)
+        result = await authService.login(cleanEmail, formData.password)
       }
 
       if (result.success) {
@@ -89,6 +155,8 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }) {
         justifyContent: 'center',
         zIndex: 1000,
         padding: '20px',
+        overflowY: 'auto',
+        overscrollBehavior: 'contain',
       }}
       onClick={onClose}
     >
@@ -98,6 +166,9 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }) {
           borderRadius: '16px',
           maxWidth: '440px',
           width: '100%',
+          maxHeight: 'calc(100vh - 40px)',
+          overflowY: 'auto',
+          overscrollBehavior: 'contain',
           padding: '36px 32px',
           boxShadow: '0 24px 48px rgba(0,0,0,0.3)',
           position: 'relative',
@@ -184,7 +255,7 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }) {
 
         {/* Error / Success Notifications */}
         {errorMsg && (
-          <div style={{ background: '#fdf0f0', border: '1px solid #f5c2c2', borderRadius: '8px', padding: '10px 14px', fontSize: '12px', color: '#c02b2b', marginBottom: '18px', fontWeight: 600 }}>
+          <div style={{ background: '#fdf0f0', border: '1px solid #f5c2c2', borderRadius: '8px', padding: '10px 14px', fontSize: '12px', color: '#c02b2b', marginBottom: '18px', fontWeight: 600, lineHeight: 1.5 }}>
             ⚠️ {errorMsg}
           </div>
         )}
@@ -199,9 +270,12 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }) {
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {mode === 'register' && (
             <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: '#132f2a', marginBottom: '6px', letterSpacing: '0.5px' }}>
-                Full Name
-              </label>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                <label style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: '#132f2a', letterSpacing: '0.5px' }}>
+                  Full Name
+                </label>
+                <span style={{ fontSize: '10px', color: '#7a9e94', fontFamily: 'monospace' }}>Letters only</span>
+              </div>
               <input
                 type="text"
                 name="name"
@@ -253,9 +327,14 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }) {
           )}
 
           <div>
-            <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: '#132f2a', marginBottom: '6px', letterSpacing: '0.5px' }}>
-              Email Address
-            </label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+              <label style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: '#132f2a', letterSpacing: '0.5px' }}>
+                Email Address
+              </label>
+              {mode === 'register' && (
+                <span style={{ fontSize: '10px', color: '#7a9e94', fontFamily: 'monospace' }}>Must start with a letter</span>
+              )}
+            </div>
             <input
               type="email"
               name="email"
@@ -275,9 +354,14 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }) {
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: '#132f2a', marginBottom: '6px', letterSpacing: '0.5px' }}>
-              Password
-            </label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+              <label style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: '#132f2a', letterSpacing: '0.5px' }}>
+                Password
+              </label>
+              {mode === 'register' && (
+                <span style={{ fontSize: '10px', color: '#7a9e94', fontFamily: 'monospace' }}>Min 6 chars</span>
+              )}
+            </div>
             <div style={{ position: 'relative' }}>
               <input
                 type={showPassword ? 'text' : 'password'}

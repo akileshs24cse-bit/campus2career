@@ -7,15 +7,40 @@ exports.register = async (req, res) => {
   try {
     const { name, email, password, course } = req.body
 
+    // 1. Check required fields
     if (!name || !email || !password) {
-      return res.status(400).json({ message: 'Name, email, and password are required.' })
+      return res.status(400).json({ message: 'Full name, email address, and password are required.' })
     }
 
+    const trimmedName = name.trim()
+    const cleanEmail = email.toLowerCase().trim()
+
+    // 2. Validate Full Name (letters, spaces, periods, apostrophes only, min 2 chars)
+    if (trimmedName.length < 2) {
+      return res.status(400).json({ message: 'Full name must be at least 2 characters long.' })
+    }
+    if (!/^[a-zA-Z\s'.]{2,60}$/.test(trimmedName)) {
+      return res.status(400).json({ message: 'Full name should only contain letters, spaces, and standard name characters.' })
+    }
+
+    // 3. Validate Email Format (must start with a letter, no consecutive dots, valid TLD)
+    if (!/^[a-zA-Z]/.test(cleanEmail)) {
+      return res.status(400).json({ message: 'Email address must start with a letter (cannot start with a number or special character).' })
+    }
+    if (cleanEmail.includes('..')) {
+      return res.status(400).json({ message: 'Email address cannot contain consecutive dots.' })
+    }
+    const emailRegex = /^[a-zA-Z][a-zA-Z0-9._%+-]*@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+    if (!emailRegex.test(cleanEmail)) {
+      return res.status(400).json({ message: 'Please enter a valid email address (e.g., student@university.edu).' })
+    }
+
+    // 4. Validate Password
     if (password.length < 6) {
       return res.status(400).json({ message: 'Password must be at least 6 characters long.' })
     }
 
-    const cleanEmail = email.toLowerCase().trim()
+    // 5. Check if user already exists
     const existingUser = await User.findOne({ email: cleanEmail })
     if (existingUser) {
       return res.status(400).json({ message: 'An account with this email already exists.' })
@@ -28,7 +53,7 @@ exports.register = async (req, res) => {
     const userCourse = validCourses.includes(course) ? course : 'CSE'
 
     const newUser = new User({
-      name: name.trim(),
+      name: trimmedName,
       email: cleanEmail,
       passwordHash,
       role: 'Student',

@@ -1,4 +1,12 @@
 const mongoose = require("mongoose");
+const dns = require("dns");
+
+// Configure public DNS resolvers to prevent ECONNREFUSED on SRV record lookups
+try {
+  dns.setServers(["8.8.8.8", "1.1.1.1", "8.8.4.4"]);
+} catch (err) {
+  console.warn("Could not set custom DNS servers:", err.message);
+}
 
 async function connectDB() {
   try {

@@ -24,10 +24,18 @@ export function VisualRoadmap({ subject, completedTopics = {}, onToggleTopic, is
   const [materials, setMaterials] = useState([])
   const [isLoadingMaterials, setIsLoadingMaterials] = useState(false)
 
-  // Clear materials when modal opens for a different topic
+  // Clear materials when modal opens for a different topic and lock body scroll
   useEffect(() => {
     setMaterials([])
     setIsLoadingMaterials(false)
+
+    if (activeTopic) {
+      const originalOverflow = document.body.style.overflow
+      document.body.style.overflow = 'hidden'
+      return () => {
+        document.body.style.overflow = originalOverflow
+      }
+    }
   }, [activeTopic])
 
   const handleFetchMaterials = async () => {
@@ -293,6 +301,8 @@ export function VisualRoadmap({ subject, completedTopics = {}, onToggleTopic, is
             justifyContent: 'center',
             zIndex: 1000,
             padding: '20px',
+            overflowY: 'auto',
+            overscrollBehavior: 'contain',
           }}
           onClick={() => setActiveTopic(null)}
         >
@@ -302,6 +312,9 @@ export function VisualRoadmap({ subject, completedTopics = {}, onToggleTopic, is
               borderRadius: '12px',
               maxWidth: '560px',
               width: '100%',
+              maxHeight: 'calc(100vh - 40px)',
+              overflowY: 'auto',
+              overscrollBehavior: 'contain',
               padding: '28px',
               boxShadow: '0 20px 40px rgba(0,0,0,0.25)',
               position: 'relative',

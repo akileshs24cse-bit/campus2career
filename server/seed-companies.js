@@ -1,6 +1,13 @@
 // seed-companies.js - Script to seed/sync initial company profiles into MongoDB
 
 require('dotenv').config()
+const dns = require('dns')
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1', '8.8.4.4'])
+} catch (err) {
+  // Ignore DNS config error
+}
+
 const mongoose = require('mongoose')
 const companiesData = require('./companies-data')
 const Company = require('./models/Company')
@@ -10,7 +17,7 @@ async function seedCompanies() {
   try {
     // Connect to MongoDB
     await mongoose.connect(MONGODB_URI)
-    console.log('✅ Connected to MongoDB:', MONGODB_URI)
+    console.log('✅ Connected to MongoDB Atlas')
 
     console.log(`⏳ Seeding/Updating ${companiesData.length} company profiles...`)
     

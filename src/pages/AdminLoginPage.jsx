@@ -46,7 +46,24 @@ export function AdminLoginPage() {
       <div style={S.glowTwo} />
 
       <div style={S.card} className="admin-login-card">
-        <div style={S.infoPane}>
+        <style>{`
+          @media (max-width: 768px) {
+            .admin-login-card {
+              grid-template-columns: 1fr !important;
+              max-width: 480px !important;
+              margin: 16px !important;
+            }
+            .admin-info-pane {
+              padding: 24px 20px !important;
+              border-right: none !important;
+              border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+            }
+            .admin-form-pane {
+              padding: 24px 20px !important;
+            }
+          }
+        `}</style>
+        <div style={S.infoPane} className="admin-info-pane">
           <div style={S.badge}>Authorized Staff Only</div>
           <div style={S.brandRow}>
             <div style={S.shieldWrap}>
@@ -75,7 +92,7 @@ export function AdminLoginPage() {
           </div>
         </div>
 
-        <div style={S.formPane}>
+        <div style={S.formPane} className="admin-form-pane">
           <div style={S.header}>
             <div>
               <div style={S.subtitle}>Institutional Console</div>
