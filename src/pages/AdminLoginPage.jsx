@@ -81,15 +81,7 @@ export function AdminLoginPage() {
             Authorized administrators can manage recruiter skill matrices, 7-day preparation sprints, and student journeys.
           </p>
 
-          <div style={S.defaultCredentialsBox}>
-            <div style={{ fontSize: 11, fontWeight: 800, color: '#d7ff75', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>
-              🔑 Default Admin Credentials
-            </div>
-            <div style={{ fontSize: 13, color: '#fff', display: 'flex', flexDirection: 'column', gap: 3, fontFamily: 'monospace' }}>
-              <div>Email: <strong style={{ color: '#d7ff75' }}>admin@campus2career.com</strong></div>
-              <div>Password: <strong style={{ color: '#d7ff75' }}>admin123</strong></div>
-            </div>
-          </div>
+
         </div>
 
         <div style={S.formPane} className="admin-form-pane">

@@ -955,6 +955,7 @@ export function AdminDashboard() {
                             value={roleEdit[u._id] || u.role}
                             onChange={e => setRoleEdit(r => ({ ...r, [u._id]: e.target.value }))}
                             style={S.select}
+                            disabled={u.email === 'admin@campus2career.com'}
                           >
                             {['Student', 'Admin'].map(r => (
                               <option key={r} value={r} style={{ background: '#132f2a', color: '#fff' }}>{r}</option>
@@ -964,11 +965,11 @@ export function AdminDashboard() {
                         <td style={S.td}>
                           <button
                             onClick={() => handleRoleUpdate(u._id)}
-                            disabled={roleEdit[u._id] === u.role}
+                            disabled={(roleEdit[u._id] || u.role) === u.role || u.email === 'admin@campus2career.com'}
                             style={{
                               ...S.applyBtn,
-                              opacity: roleEdit[u._id] === u.role ? 0.4 : 1,
-                              cursor: roleEdit[u._id] === u.role ? 'default' : 'pointer',
+                              opacity: ((roleEdit[u._id] || u.role) === u.role || u.email === 'admin@campus2career.com') ? 0.4 : 1,
+                              cursor: ((roleEdit[u._id] || u.role) === u.role || u.email === 'admin@campus2career.com') ? 'default' : 'pointer',
                             }}
                           >
                             Apply

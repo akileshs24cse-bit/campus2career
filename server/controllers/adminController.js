@@ -155,8 +155,15 @@ exports.updateUserRole = async (req, res) => {
     if (!validRoles.includes(role)) {
       return res.status(400).json({ message: `Invalid role. Must be one of: ${validRoles.join(', ')}` })
     }
+    
+    const existingUser = await User.findById(id)
+    if (!existingUser) return res.status(404).json({ message: 'User not found.' })
+    
+    if (existingUser.email === 'admin@campus2career.com') {
+      return res.status(403).json({ message: 'Cannot change the role of the primary admin.' })
+    }
+
     const user = await User.findByIdAndUpdate(id, { role }, { new: true, select: '-passwordHash' })
-    if (!user) return res.status(404).json({ message: 'User not found.' })
     res.json({ message: `Role updated to ${role}.`, user })
   } catch (error) {
     console.error('Admin Role Update Error:', error)
